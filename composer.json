@@ -1,7 +1,10 @@
 {
   "name": "mifesta/hyphenation-php",
   "description": "Arrangements of hyphenation in words",
-  "keywords": ["php","hyphenation"],
+  "keywords": [
+    "php",
+    "hyphenation"
+  ],
   "homepage": "https://hyphenation.mifesta.com",
   "type": "library",
   "require": {
