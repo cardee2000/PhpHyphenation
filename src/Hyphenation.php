@@ -2,6 +2,8 @@
 
 namespace Hyphenation;
 
+use MifestaFileSystem\FileSystem;
+
 /**
  * Class Hyphenation
  * Arrangements of hyphenation in words
@@ -213,6 +215,9 @@ class Hyphenation
                 }
             }
             if (isset($conf['compiled'][0])) {
+                $class = new FileSystem();
+                $conf_filename = $class->normalize($conf['compiled'][0]);
+                $class->create_directory(dirname($conf_filename));
                 file_put_contents($conf['compiled'][0], serialize($ret));
             }
         }
@@ -304,7 +309,7 @@ class Hyphenation
      */
     protected function get_config_file($lang = 'ru_RU')
     {
-        return __DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . $lang . '.conf';
+        return __DIR__ . DIRECTORY_SEPARATOR . 'conf' . DIRECTORY_SEPARATOR . $lang . '.conf';
     }
 
     /**
