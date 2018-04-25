@@ -1,5 +1,6 @@
 {
   "name": "mifesta/hyphenation-php",
+  "version": "1.0.1",
   "type": "library",
   "description": "Arrangements of hyphenation in words",
   "keywords": [
