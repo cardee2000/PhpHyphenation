@@ -281,6 +281,28 @@ class Hyphenation
      * SUPPORTED METHODS                                        *
      ************************************************************/
     /**
+     * Check limits
+     */
+    protected function check_limits()
+    {
+        $this->left_limit = max($this->left_limit, $this->min_left_limit);
+        $this->right_limit = max($this->right_limit, $this->min_right_limit);
+        $this->length_limit = max($this->length_limit, $this->left_limit + $this->right_limit);
+        $this->right_limit_last = max($this->right_limit, $this->right_limit_last);
+        $this->left_limit_uc = max($this->left_limit, $this->left_limit_uc);
+    }
+
+    /**
+     * Get config file
+     * @param string $lang
+     * @return string
+     */
+    protected function get_config_file($lang = 'ru_RU')
+    {
+        return __DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . $lang . '.conf';
+    }
+
+    /**
      * Hyphenate the word, you don't need to call it directly.
      * @param string $instr
      * @param bool $last_word
@@ -362,28 +384,6 @@ class Hyphenation
     }
 
     /**
-     * Get config file
-     * @param string $lang
-     * @return string
-     */
-    protected function get_config_file($lang = 'ru_RU')
-    {
-        return __DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . $lang . '.conf';
-    }
-
-    /**
-     * Check limits
-     */
-    protected function check_limits()
-    {
-        $this->left_limit = max($this->left_limit, $this->min_left_limit);
-        $this->right_limit = max($this->right_limit, $this->min_right_limit);
-        $this->length_limit = max($this->length_limit, $this->left_limit + $this->right_limit);
-        $this->right_limit_last = max($this->right_limit, $this->right_limit_last);
-        $this->left_limit_uc = max($this->left_limit, $this->left_limit_uc);
-    }
-
-    /**
      * Service function
      * @param string $instr
      * @param bool $is_unicode
@@ -409,6 +409,116 @@ class Hyphenation
             $patterns = $this->pattern2unicode($patterns);
         }
         return preg_replace($patterns, $replaces, $instr);
+    }
+
+    /**
+     * Remove comments and empty lines
+     * @param string $instr
+     * @param bool $is_unicode
+     * @return string
+     */
+    private function clean_config($instr, $is_unicode = false)
+    {
+        $patterns = array();
+        $replaces = array();
+        $patterns[] = '/\/\/.*$/m';
+        $replaces[] = '';
+        $patterns[] = '/^\s*/m';
+        $replaces[] = '';
+        $patterns[] = '/\s*$/m';
+        $replaces[] = '';
+        $patterns[] = '/(?<=\n)\n+/';
+        $replaces[] = '';
+        $patterns[] = '/\n$/';
+        $replaces[] = '';
+        $patterns[] = '/^\n/';
+        $replaces[] = '';
+        if ($is_unicode) {
+            $patterns = $this->pattern2unicode($patterns);
+        }
+        return preg_replace($patterns, $replaces, $this->unix_line_feeds($instr, $is_unicode));
+    }
+
+    /**
+     * Returns value of array by key
+     * @param array $arr
+     * @param string $k
+     * @return bool
+     */
+    private function get_array_value($arr, $k)
+    {
+        return (is_array($arr) && isset($arr[$k])) ? $arr[$k] : false;
+    }
+
+    /**
+     * Parse config file
+     * @param $conf_file
+     * @param bool $is_unicode
+     * @return array|bool
+     */
+    private function parse_config($conf_file, $is_unicode = false)
+    {
+        if (!is_file($conf_file) || !is_readable($conf_file)) {
+            return false;
+        }
+        $in_file = file_get_contents($conf_file);
+        if (!$in_file) {
+            return false;
+        } else {
+            return $this->parse_config_str($in_file, $is_unicode);
+        }
+    }
+
+    /**
+     * Parse config string
+     * @param $str
+     * @param bool $is_unicode
+     * @return array
+     */
+    private function parse_config_str($str, $is_unicode = false)
+    {
+        $patterns = array();
+        $replaces = array();
+        $patterns[] = '/&SCREENEDSPACE&/';
+        $replaces[] = ' ';
+        $patterns[] = '/&SCREENEDLFEED&/';
+        $replaces[] = "\n";
+        $patterns[] = '/&SCREENSNQUOTE&/';
+        $replaces[] = '\'';
+        $patterns[] = '/&SCREENDBQUOTE&/';
+        $replaces[] = '"';
+        $patterns[] = '/&SCREENDBSLASH&/';
+        $replaces[] = '//';
+        $patterns[] = '/&SCREENEDEQUAL&/';
+        $replaces[] = '=';
+        if ($is_unicode) {
+            $patterns = $this->pattern2unicode($patterns);
+        }
+        $ret = array();
+        $str = $this->unix_line_feeds($str, $is_unicode);
+        $tmp_pattern = '/(?<=\=)\s*\'\'/';
+        if ($is_unicode) {
+            $tmp_pattern = $this->pattern2unicode($tmp_pattern);
+        }
+        $str = preg_replace($tmp_pattern, '$1', $str);
+        $tmp_pattern = '/(?<!\x5C)\'(.*[^\x5C])\'/Us';
+        if ($is_unicode) {
+            $tmp_pattern = $this->pattern2unicode($tmp_pattern);
+            $str = preg_replace_callback($tmp_pattern,
+                create_function('$in', 'return $this->screen_special($in[1], true);'), $str);
+        } else {
+            $str = preg_replace_callback($tmp_pattern,
+                create_function('$in', 'return $this->screen_special($in[1], false);'), $str);
+        }
+        $str = $this->clean_config($str, $is_unicode);
+        $strings = explode("\n", $str);
+        foreach ($strings as $val) {
+            $pair = explode('=', $val);
+            if (isset($pair[0])) {
+                $ret[trim($pair[0])][] = (isset($pair[1])) ? preg_replace($patterns, $replaces, trim($pair[1])) : true;
+            }
+        }
+        return $ret;
     }
 
     /**
@@ -466,115 +576,5 @@ class Hyphenation
     private function unix_line_feeds($str, $is_unicode = false)
     {
         return preg_replace('/\r\n?/' . (($is_unicode) ? 'u' : ''), "\n", $str);
-    }
-
-    /**
-     * Returns value of array by key
-     * @param array $arr
-     * @param string $k
-     * @return bool
-     */
-    private function get_array_value($arr, $k)
-    {
-        return (is_array($arr) && isset($arr[$k])) ? $arr[$k] : false;
-    }
-
-    /**
-     * Remove comments and empty lines
-     * @param string $instr
-     * @param bool $is_unicode
-     * @return string
-     */
-    private function clean_config($instr, $is_unicode = false)
-    {
-        $patterns = array();
-        $replaces = array();
-        $patterns[] = '/\/\/.*$/m';
-        $replaces[] = '';
-        $patterns[] = '/^\s*/m';
-        $replaces[] = '';
-        $patterns[] = '/\s*$/m';
-        $replaces[] = '';
-        $patterns[] = '/(?<=\n)\n+/';
-        $replaces[] = '';
-        $patterns[] = '/\n$/';
-        $replaces[] = '';
-        $patterns[] = '/^\n/';
-        $replaces[] = '';
-        if ($is_unicode) {
-            $patterns = $this->pattern2unicode($patterns);
-        }
-        return preg_replace($patterns, $replaces, $this->unix_line_feeds($instr, $is_unicode));
-    }
-
-    /**
-     * Parse config string
-     * @param $str
-     * @param bool $is_unicode
-     * @return array
-     */
-    private function parse_config_str($str, $is_unicode = false)
-    {
-        $patterns = array();
-        $replaces = array();
-        $patterns[] = '/&SCREENEDSPACE&/';
-        $replaces[] = ' ';
-        $patterns[] = '/&SCREENEDLFEED&/';
-        $replaces[] = "\n";
-        $patterns[] = '/&SCREENSNQUOTE&/';
-        $replaces[] = '\'';
-        $patterns[] = '/&SCREENDBQUOTE&/';
-        $replaces[] = '"';
-        $patterns[] = '/&SCREENDBSLASH&/';
-        $replaces[] = '//';
-        $patterns[] = '/&SCREENEDEQUAL&/';
-        $replaces[] = '=';
-        if ($is_unicode) {
-            $patterns = $this->pattern2unicode($patterns);
-        }
-        $ret = array();
-        $str = $this->unix_line_feeds($str, $is_unicode);
-        $tmp_pattern = '/(?<=\=)\s*\'\'/';
-        if ($is_unicode) {
-            $tmp_pattern = $this->pattern2unicode($tmp_pattern);
-        }
-        $str = preg_replace($tmp_pattern, '$1', $str);
-        $tmp_pattern = '/(?<!\x5C)\'(.*[^\x5C])\'/Us';
-        if ($is_unicode) {
-            $tmp_pattern = $this->pattern2unicode($tmp_pattern);
-            $str = preg_replace_callback($tmp_pattern,
-                create_function('$in', 'return $this->screen_special($in[1], true);'), $str);
-        } else {
-            $str = preg_replace_callback($tmp_pattern,
-                create_function('$in', 'return $this->screen_special($in[1], false);'), $str);
-        }
-        $str = $this->clean_config($str, $is_unicode);
-        $strings = explode("\n", $str);
-        foreach ($strings as $val) {
-            $pair = explode('=', $val);
-            if (isset($pair[0])) {
-                $ret[trim($pair[0])][] = (isset($pair[1])) ? preg_replace($patterns, $replaces, trim($pair[1])) : true;
-            }
-        }
-        return $ret;
-    }
-
-    /**
-     * Parse config file
-     * @param $conf_file
-     * @param bool $is_unicode
-     * @return array|bool
-     */
-    private function parse_config($conf_file, $is_unicode = false)
-    {
-        if (!is_file($conf_file) || !is_readable($conf_file)) {
-            return false;
-        }
-        $in_file = file_get_contents($conf_file);
-        if (!$in_file) {
-            return false;
-        } else {
-            return $this->parse_config_str($in_file, $is_unicode);
-        }
     }
 }

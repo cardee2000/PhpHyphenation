@@ -1,10 +1,10 @@
 // This file has been renamed from ukhyphen.tex to hyph-en-gb.tex in June 2008
 // for consistency with other files with hyphenation patterns in hyph-utf8 package.
 // No other changes made. See http://www.tug.org/tex-hyphen for more details.
-
+//
 // File: ukhyphen.tex
 // TeX hyphenation patterns for UK English
-
+//
 // Unlimited copying and redistribution of this file
 // is permitted so long as the file is not modified
 // in any way.
@@ -31,7 +31,7 @@
 //(b) the file must contain conditions identical to these,
 // except that the modifier/distributor may, if he or she
 // wishes, augment the list of proscribed filenames.
-
+//
 //       $Log: ukhyph.tex $
 //       Revision 2.0  1996/09/10 15:04:04  ucgadkw
 //       o  added list of hyphenation exceptions at the end of this file.

@@ -1,14 +1,14 @@
 ﻿// Converted from this one:
 //
-//// ruhyphal.tex:  Russian hyphenation patterns, version 2003/03/10
-//// Copyright 1999-2003 Alexander I. Lebedev <swan@scon155.phys.msu.su>
-////
-//// This program may be distributed and/or modified under the conditions
-//// of the LaTeX Project Public License, either version 1.2 or any later
-//// version.
-////
-//// Patterns were generated with patgen from a 990,000-word list and then
-//// manually corrected.
+// ruhyphal.tex:  Russian hyphenation patterns, version 2003/03/10
+// Copyright 1999-2003 Alexander I. Lebedev <swan@scon155.phys.msu.su>
+//
+// This program may be distributed and/or modified under the conditions
+// of the LaTeX Project Public License, either version 1.2 or any later
+// version.
+//
+// Patterns were generated with patgen from a 990,000-word list and then
+// manually corrected.
 
 UTF-8
 
@@ -4676,4 +4676,3 @@ UTF-8
 юсом
 ядо-зу-бе
 ярем-но-го
-
