@@ -1,36 +1,19 @@
 {
-  "name": "mifesta/hyphenation-php",
-  "version": "1.0.1",
-  "description": "Arrangements of hyphenation in words",
-  "keywords": ["php","hyphenation"],
-  "homepage": "https://hyphenation.mifesta.com",
-  "type": "library",
-  "license": "(MIT or GPL-3.0+)",
-  "authors": [
-    {
-      "name": "Sergei Gruzdov",
-      "email": "cardee@mifesta.com"
-    }
-  ],
-  "support": {
-    "email": "cardee@mifesta.com"
-  },
-  "require": {
-    "php": ">=5.2.0"
-  },
-  "require-dev": {
-
-  },
-  "autoload": {
-    "files": [
-      "hyphenation.php"
-    ]
-  },
-  "scripts": {
-    "post-install-cmd": [
-      "php -r \"chmod('./compiled', 0777);\"",
-      "php -r \"chmod('./conf', 0777);\"",
-      "php -r \"chmod('./patterns', 0777);\""
-    ]
-  }
+    "name": "mifesta/hyphenation-php",
+    "description": "Arrangements of hyphenation in words",
+    "type": "library",
+    "require": {
+        "php": ">=5.2.0"
+    },
+    "require-dev": {
+        "php": ">=5.2.0"
+    },
+    "license": "(MIT or GPL-3.0+)",
+    "authors": [
+        {
+            "name": "Sergei Gruzdov",
+            "email": "cardee@mifesta.com"
+        }
+    ],
+    "minimum-stability": "stable"
 }
