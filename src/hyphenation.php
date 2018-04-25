@@ -1,8 +1,8 @@
 <?php
 
-namespace PhpHyphenation;
+namespace Hyphenation;
 
-class PhpHyphenation
+class Hyphenation
 {
     /************************************************************
      * MAIN CONSTANTS                                           *

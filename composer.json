@@ -1,0 +1,28 @@
+{
+    "name": "mifesta/hyphenation-php",
+    "type": "library",
+
+    "description": "A PHP class to generate PDF files from HTML with Unicode/UTF-8 and CJK support",
+    "keywords": ["php", "hyphenation"],
+
+    "license": ["GPL-2.0"],
+
+    "authors": [
+        {
+            "name": "Sergei Gruzdov",
+            "role": "Publisher"
+        }
+    ],
+
+    "autoload": {
+        "classmap": ["hyphenation.php", "classes"]
+    },
+
+    "scripts": {
+        "post-install-cmd": [
+            "php -r \"chmod('./compliled', 0777);\"",
+            "php -r \"chmod('./conf', 0777);\"",
+            "php -r \"chmod('./patterns', 0777);\""
+        ]
+    }
+}
