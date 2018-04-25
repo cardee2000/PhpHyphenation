@@ -29,6 +29,10 @@ class Hyphenation
      * PROPERTIES                                               *
      ************************************************************/
     /**
+     * @var FileSystem|null;
+     */
+    private $_class_filesystem;
+    /**
      * internal encoding
      * @var string|null
      */
@@ -65,9 +69,9 @@ class Hyphenation
     protected $min_right_limit;
     /**
      * current left hyphenation limit
-     * @var string
+     * @var string (­||&shy;)
      */
-    protected $soft_hyphen = '&shy;';
+    protected $soft_hyphen = '­';
     /**
      * input/output encoding
      * @var string
@@ -107,9 +111,10 @@ class Hyphenation
      * MAGIC METHODS                                            *
      ************************************************************/
     /**
-     * PhpHyphenation constructor
+     * Hyphenation constructor
      * @param string $lang
      * @param int $recompile
+     * @throws \Exception
      */
     public function __construct($lang, $recompile = self::AUTO_RECOMPILE)
     {
@@ -137,10 +142,10 @@ class Hyphenation
         }
         // define the necessity to remake dictionary
         if ($recompile == self::AUTO_RECOMPILE) {
-            $date_out = $this->get_array_value(stat($conf['compiled'][0]), 'mtime');
-            $date_in = $this->get_array_value(stat($configuration_file), 'mtime');
+            $date_out = $this->get_array_value($this->get_class_filesystem()->get_stat($conf['compiled'][0]), 'mtime');
+            $date_in = $this->get_array_value($this->get_class_filesystem()->get_stat($configuration_file), 'mtime');
             foreach ($conf['rules'] as $val) {
-                $date_in = max($date_in, $this->get_array_value(stat($val), 'mtime'));
+                $date_in = max($date_in, $this->get_array_value($this->get_class_filesystem()->get_stat($val), 'mtime'));
             }
             if ($date_in > $date_out) {
                 $recompile = self::ALWAYS_RECOMPILE;
@@ -148,7 +153,7 @@ class Hyphenation
         }
         // recompile the dictionary in case of version mismatch
         if ($recompile != self::ALWAYS_RECOMPILE) {
-            $ret = unserialize(file_get_contents($conf['compiled'][0]));
+            $ret = unserialize($this->get_content($conf['compiled'][0]));
             if (!isset($ret['ver']) || $ret['ver'] !== self::VERSION) {
                 $recompile = self::ALWAYS_RECOMPILE;
             }
@@ -171,7 +176,8 @@ class Hyphenation
             $ret['ver'] = self::VERSION;
             foreach ($conf['rules'] as $fnm) {
                 if (is_file($fnm)) {
-                    $in_file = explode("\n", $this->clean_config(file_get_contents($fnm)));
+                    $in_file = explode("\n", $this->clean_config($this->get_content($fnm)));
+                    var_dump($in_file);
                     // first string of the rules file is the encoding of this file
                     $encoding = $in_file[0];
                     unset($in_file[0]);
@@ -215,10 +221,9 @@ class Hyphenation
                 }
             }
             if (isset($conf['compiled'][0])) {
-                $class = new FileSystem();
-                $conf_filename = $class->normalize($conf['compiled'][0]);
-                $class->create_directory(dirname($conf_filename));
-                file_put_contents($conf['compiled'][0], serialize($ret));
+                $conf_filename = $this->normalize_filename($conf['compiled'][0]);
+                $this->get_class_filesystem()->create_directory(dirname($conf_filename));
+                $this->get_class_filesystem()->put_content($conf_filename, serialize($ret));
             }
         }
         $this->internal_encoding = isset($ret, $ret['enc']) ? $ret['enc'] : null;
@@ -241,9 +246,11 @@ class Hyphenation
      * @param bool $preserveTags if set to TRUE (default), then do not process words inside <>
      * @return mixed
      */
-    public function hyphenate($instr, $encoding = '', $shy = '&shy;', $preserveTags = true)
+    public function hyphenate($instr, $encoding = '', $shy = '', $preserveTags = true)
     {
-        $this->soft_hyphen = $shy;
+        if ($shy) {
+            $this->soft_hyphen = $shy;
+        }
         $alphabet = $this->alphabet . $this->alphabet_uc;
         if (!$encoding || strcasecmp($this->internal_encoding, $encoding) == 0) {
             $uni = '';
@@ -461,6 +468,38 @@ class Hyphenation
     }
 
     /**
+     * @return FileSystem
+     */
+    private function get_class_filesystem()
+    {
+        if (!$this->_class_filesystem) {
+            $this->_class_filesystem = new FileSystem();
+        }
+        return $this->_class_filesystem;
+    }
+
+    /**
+     * Get file content
+     * @param $filename
+     * @return string
+     */
+    private function get_content($filename)
+    {
+        $class = $this->get_class_filesystem();
+        return $class->remove_bom($class->get_content($filename));
+    }
+
+    /**
+     * Normalize filename
+     * @param string $filename
+     * @return string
+     */
+    private function normalize_filename($filename)
+    {
+        return $this->get_class_filesystem()->normalize($filename);
+    }
+
+    /**
      * Parse config file
      * @param $conf_file
      * @param bool $is_unicode
@@ -471,7 +510,7 @@ class Hyphenation
         if (!is_file($conf_file) || !is_readable($conf_file)) {
             return false;
         }
-        $in_file = file_get_contents($conf_file);
+        $in_file = $this->get_content($conf_file);
         if (!$in_file) {
             return false;
         } else {
