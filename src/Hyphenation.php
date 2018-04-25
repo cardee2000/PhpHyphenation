@@ -2,6 +2,11 @@
 
 namespace Hyphenation;
 
+/**
+ * Class Hyphenation
+ * Arrangements of hyphenation in words
+ * @package Hyphenation
+ */
 class Hyphenation
 {
     /************************************************************
