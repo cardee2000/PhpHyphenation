@@ -23,16 +23,16 @@
     "email": "cardee@mifesta.com"
   },
   "autoload": {
-    "files": [
-      "hyphenation.php"
-    ]
+    "psr-4": {
+      "Hyphenation\\": "src/"
+    }
   },
   "minimum-stability": "stable",
   "scripts": {
     "post-install-cmd": [
-      "php -r \"chmod('./compiled', 0777);\"",
-      "php -r \"chmod('./conf', 0777);\"",
-      "php -r \"chmod('./patterns', 0777);\""
+      "php -r \"chmod('./src/compiled', 0777);\"",
+      "php -r \"chmod('./src/conf', 0777);\"",
+      "php -r \"chmod('./src/patterns', 0777);\""
     ]
   }
 }
