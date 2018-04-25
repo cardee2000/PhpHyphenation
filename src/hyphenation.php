@@ -7,7 +7,7 @@ class Hyphenation
     /************************************************************
      * MAIN CONSTANTS                                           *
      ************************************************************/
-    const VERSION = '0.1.2';
+    const VERSION = '1.0.1';
     const AUTO_RECOMPILE = 0;
     const NEVER_RECOMPILE = 1;
     const ALWAYS_RECOMPILE = 2;
