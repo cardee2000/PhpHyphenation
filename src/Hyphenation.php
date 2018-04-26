@@ -177,7 +177,6 @@ class Hyphenation
             foreach ($conf['rules'] as $fnm) {
                 if (is_file($fnm)) {
                     $in_file = explode("\n", $this->clean_config($this->get_content($fnm)));
-                    var_dump($in_file);
                     // first string of the rules file is the encoding of this file
                     $encoding = $in_file[0];
                     unset($in_file[0]);
