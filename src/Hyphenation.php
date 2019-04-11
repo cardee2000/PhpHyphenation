@@ -7,6 +7,7 @@ use MifestaFileSystem\FileSystem;
 /**
  * Class Hyphenation
  * Arrangements of hyphenation in words
+ * Arrangements of hyphenation in words
  * @package Hyphenation
  */
 class Hyphenation
@@ -14,7 +15,7 @@ class Hyphenation
     /************************************************************
      * MAIN CONSTANTS                                           *
      ************************************************************/
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
     const AUTO_RECOMPILE = 0;
     const NEVER_RECOMPILE = 1;
     const ALWAYS_RECOMPILE = 2;
@@ -160,7 +161,7 @@ class Hyphenation
         }
         // recompile and save the dictionary
         if ($recompile == self::ALWAYS_RECOMPILE) {
-            $ret = array();
+            $ret = [];
             // parse alphabet
             $ret['alphabet'] = preg_replace('/\((.+)\>(.+)\)/U', '$1', $conf['alphabet'][0]);
             $ret['alphabetUC'] = $conf['alphabetUC'][0];
@@ -169,7 +170,7 @@ class Hyphenation
                 foreach ($matches[1] as $key => $val) {
                     $ret['trans'][$val] = $matches[2][$key];
                 }
-            } else $ret['trans'] = array();
+            } else $ret['trans'] = [];
             $ret['ll'] = $conf['left_limit'][0];
             $ret['rl'] = $conf['right_limit'][0];
             $ret['enc'] = $conf['internal_encoding'][0];
@@ -208,13 +209,13 @@ class Hyphenation
                             // to be presented
                             $sb = $ind;
                             do {
-                                $sb = substr($sb, 0, strlen($sb) - 1);
+                                $sb = mb_substr($sb, 0, mb_strlen($sb) - 1);
                                 if (!isset($ret['dict'][$sb])) {
                                     $ret['dict'][$sb] = 0;
                                 } else {
                                     break;
                                 }
-                            } while (strlen($sb) > 1);
+                            } while (mb_strlen($sb) > 1);
                         }
                     }
                 }
@@ -265,13 +266,15 @@ class Hyphenation
         // last word in the stream should be treated as the last word of paragraph
         $matches[2][sizeof($matches[1]) - 1][0] = '1';
         $offset = 0;
+        $mb_offset = 0;
         $this->io_encoding = $encoding;
         foreach ($matches[1] as $i => $match) {
             $word = $match[0];
-            $pos = $match[1];
+            $pos = $match[1] - $mb_offset;
+            $mb_offset += strlen($word) - mb_strlen($word, $this->internal_encoding);
             $hyphenation_word = $this->hyphenate_word($word, (isset($matches[2][$i][0]) && $matches[2][$i][0] !== ''));
-            $instr = substr_replace($instr, $hyphenation_word, $pos + $offset, strlen($word));
-            $offset += strlen($hyphenation_word) - strlen($word);
+            $instr = $this->mb_substr_replace($instr, $hyphenation_word, $pos + $offset, mb_strlen($word), $this->io_encoding);
+            $offset += mb_strlen($hyphenation_word, $this->io_encoding) - mb_strlen($word, $this->io_encoding);
         }
         return $instr;
     }
@@ -332,25 +335,25 @@ class Hyphenation
         // convert soft_hyphen to internal encoding
         $hyphen = ($to_transcode) ? @iconv($this->io_encoding, $this->internal_encoding, $this->soft_hyphen) : $this->soft_hyphen;
         // \x5C character (backslash) indicates to not process this world at all
-        if (false !== strpos($word, "\x5C")) {
+        if (false !== mb_strpos($word, "\x5C", 0, $this->internal_encoding)) {
             return $instr;
         }
         // convert the first letter to low case
         $word_lower = $word;
-        $st_pos = strpos($this->alphabet_uc, $word{0});
+        $st_pos = mb_strpos($this->alphabet_uc, mb_substr($word, 0, 1, $this->internal_encoding), 0, $this->internal_encoding);
         if ($st_pos !== false) {
             $ll = $this->left_limit_uc;
-            $word_lower{0} = $this->alphabet{$st_pos};
+            $word_lower = mb_substr($this->alphabet, $st_pos, 1, $this->internal_encoding) . mb_substr($word_lower, 1, null, $this->internal_encoding);
         } else {
             $ll = $this->left_limit;
         }
         $rl = ($last_word) ? $this->right_limit_last : $this->right_limit;
         // check all letters but the first for upper case
         for ($i = 1, $len = strlen($word_lower); $i < $len; $i++) {
-            $st_pos = strpos($this->alphabet_uc, $word{$i});
+            $st_pos = mb_strpos($this->alphabet_uc, mb_substr($word, $i, 1, $this->internal_encoding), 0, $this->internal_encoding);
             if ($st_pos !== false) {
                 if ($this->proceed_uppercase) {
-                    $word_lower{$i} = $this->alphabet{$st_pos};
+                    $word_lower = ($i > 0 ? mb_substr($word_lower, 0, $i, $this->internal_encoding) : '') . mb_substr($this->alphabet, $st_pos, 1, $this->internal_encoding) . mb_substr($word_lower, $i + 1, null, $this->internal_encoding);
                 } else {
                     return $instr;
                 }
@@ -358,19 +361,19 @@ class Hyphenation
         }
         $word_lower = '.' . $word_lower . '.';
         $word = '.' . $word . '.';
-        $len = strlen($word);
+        $len = mb_strlen($word, $this->internal_encoding);
         // translate letters
         foreach ($this->translation as $key => $val) {
             $word_lower = str_replace($key, $val, $word_lower);
         }
-        $word_mask = str_split(str_repeat('0', $len + 1));
+        $word_mask = $this->mb_str_split(str_repeat('0', $len + 1));
         // step by step cycle
         for ($i = 0; $i < $len - 1; $i++) {
             // Increasing fragment's length cycle.
             // The first symbol of the word always is dot,
             // so we don't need to check 1-length fragment at the first step
             for ($k = ($i == 0) ? 2 : 1; $k <= $len - $i; $k++) {
-                $ind = substr($word_lower, $i, $k);
+                $ind = mb_substr($word_lower, $i, $k, $this->internal_encoding);
                 // fallback
                 if (!isset($this->dictionary[$ind])) {
                     break;
@@ -378,17 +381,21 @@ class Hyphenation
                 $val = $this->dictionary[$ind];
                 if ($val !== 0) {
                     for ($j = 0; $j <= $k; $j++) {
-                        $word_mask[$i + $j] = max($word_mask[$i + $j], $val[$j]);
+                        $word_mask[$i + $j] = max($word_mask[$i + $j], mb_substr($val, $j, 1, $this->internal_encoding));
                     }
                 }
             }
         }
         $ret = '';
-        foreach (str_split($word) as $key => $val) {
+        $syllable = false;
+        foreach ($this->mb_str_split($word) as $key => $val) {
             if ($val != '.') {
                 $ret .= $val;
-                if ($key > $ll - 1 && $key < $len - $rl - 1 && $word_mask[$key + 1] % 2) {
+                if ($syllable && $key > $ll - 1 && $key < $len - $rl - 1 && $word_mask[$key + 1] % 2) {
                     $ret .= $hyphen;
+                    $syllable = false;
+                } else {
+                    $syllable = true;
                 }
             }
         }
@@ -407,8 +414,8 @@ class Hyphenation
      */
     protected function screen_special($instr, $is_unicode = false)
     {
-        $patterns = array();
-        $replaces = array();
+        $patterns = [];
+        $replaces = [];
         $patterns[] = '/\n/';
         $replaces[] = '&SCREENEDLFEED&';
         $patterns[] = '/\s/';
@@ -435,8 +442,8 @@ class Hyphenation
      */
     private function clean_config($instr, $is_unicode = false)
     {
-        $patterns = array();
-        $replaces = array();
+        $patterns = [];
+        $replaces = [];
         $patterns[] = '/\/\/.*$/m';
         $replaces[] = '';
         $patterns[] = '/^\s*/m';
@@ -525,8 +532,8 @@ class Hyphenation
      */
     private function parse_config_str($str, $is_unicode = false)
     {
-        $patterns = array();
-        $replaces = array();
+        $patterns = [];
+        $replaces = [];
         $patterns[] = '/&SCREENEDSPACE&/';
         $replaces[] = ' ';
         $patterns[] = '/&SCREENEDLFEED&/';
@@ -542,7 +549,7 @@ class Hyphenation
         if ($is_unicode) {
             $patterns = $this->pattern2unicode($patterns);
         }
-        $ret = array();
+        $ret = [];
         $str = $this->unix_line_feeds($str, $is_unicode);
         $tmp_pattern = '/(?<=\=)\s*\'\'/';
         if ($is_unicode) {
@@ -580,7 +587,7 @@ class Hyphenation
     {
         if (is_array($pattern)) {
             // pattern is array: recursive call
-            $ret = array();
+            $ret = [];
             foreach ($pattern as $key => $val) {
                 $ret[$key] = $this->pattern2unicode($val, $from_enc, $flags);
             }
@@ -590,8 +597,8 @@ class Hyphenation
             $ret = ($flags & self::P2U_RECODE) ? @iconv($from_enc, 'UTF-8', $pattern) : $pattern;
             // convert types to properties
             if ($flags & self::P2U_PROPERTIES) {
-                $patterns = array();
-                $replaces = array();
+                $patterns = [];
+                $replaces = [];
                 $patterns[] = '/(?<!(?<!(?<!\x5C)\x5C)\x5C)\x5Cd/';
                 $replaces[] = '\p{Nd}';
                 $patterns[] = '/(?<!(?<!(?<!\x5C)\x5C)\x5C)\x5CD/';
@@ -624,5 +631,59 @@ class Hyphenation
     private function unix_line_feeds($str, $is_unicode = false)
     {
         return preg_replace('/\r\n?/' . (($is_unicode) ? 'u' : ''), "\n", $str);
+    }
+
+    /**
+     * Convert a string to an array
+     * @param string $str
+     * @param int $l
+     * @param string|null $encoding
+     * @return array|bool
+     */
+    private function mb_str_split($str, $l = 1, $encoding = null)
+    {
+        if (is_null($encoding)) {
+            $encoding = mb_internal_encoding();
+        }
+        if ($l > 0) {
+            $ret = [];
+            $len = mb_strlen($str, $encoding);
+            for ($i = 0; $i < $len; $i += $l) {
+                $ret[] = mb_substr($str, $i, $l, $encoding);
+            }
+            return $ret;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $string
+     * @param string $replacement
+     * @param int $start
+     * @param int|null $length
+     * @param string|null $encoding
+     * @return mixed|string
+     */
+    private function mb_substr_replace($string, $replacement, $start, $length = null, $encoding = null)
+    {
+        if (is_null($encoding)) {
+            $encoding = mb_internal_encoding();
+        }
+        $string_length = is_null($encoding) ? mb_strlen($string) : mb_strlen($string, $encoding);
+        if ($start < 0) {
+            $start = max(0, $string_length + $start);
+        } else if ($start > $string_length) {
+            $start = $string_length;
+        }
+        if ($length < 0) {
+            $length = max(0, $string_length - $start + $length);
+        } else if (is_null($length) || ($length > $string_length)) {
+            $length = $string_length;
+        }
+        if (($start + $length) > $string_length) {
+            $length = $string_length - $start;
+        }
+        return mb_substr($string, 0, $start, $encoding) . $replacement . mb_substr($string, $start + $length, $string_length - $start - $length, $encoding);
     }
 }
