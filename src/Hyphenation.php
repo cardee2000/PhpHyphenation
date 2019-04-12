@@ -15,7 +15,7 @@ class Hyphenation
     /************************************************************
      * MAIN CONSTANTS                                           *
      ************************************************************/
-    const VERSION = '1.0.2';
+    const VERSION = '1.0.3';
     const AUTO_RECOMPILE = 0;
     const NEVER_RECOMPILE = 1;
     const ALWAYS_RECOMPILE = 2;
@@ -266,12 +266,11 @@ class Hyphenation
         // last word in the stream should be treated as the last word of paragraph
         $matches[2][sizeof($matches[1]) - 1][0] = '1';
         $offset = 0;
-        $mb_offset = 0;
         $this->io_encoding = $encoding;
+        $start_instr = $instr;
         foreach ($matches[1] as $i => $match) {
             $word = $match[0];
-            $pos = $match[1] - $mb_offset;
-            $mb_offset += strlen($word) - mb_strlen($word, $this->internal_encoding);
+            $pos = mb_strlen(substr($start_instr, 0, $match[1] + 1), $this->internal_encoding) - 1;
             $hyphenation_word = $this->hyphenate_word($word, (isset($matches[2][$i][0]) && $matches[2][$i][0] !== ''));
             $instr = $this->mb_substr_replace($instr, $hyphenation_word, $pos + $offset, mb_strlen($word), $this->io_encoding);
             $offset += mb_strlen($hyphenation_word, $this->io_encoding) - mb_strlen($word, $this->io_encoding);
@@ -349,7 +348,7 @@ class Hyphenation
         }
         $rl = ($last_word) ? $this->right_limit_last : $this->right_limit;
         // check all letters but the first for upper case
-        for ($i = 1, $len = strlen($word_lower); $i < $len; $i++) {
+        for ($i = 1, $len = mb_strlen($word_lower, $this->internal_encoding); $i < $len; $i++) {
             $st_pos = mb_strpos($this->alphabet_uc, mb_substr($word, $i, 1, $this->internal_encoding), 0, $this->internal_encoding);
             if ($st_pos !== false) {
                 if ($this->proceed_uppercase) {
