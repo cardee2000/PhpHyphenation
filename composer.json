@@ -1,34 +1,34 @@
 {
   "name": "mifesta/hyphenation-php",
-  "description": "Arrangements of hyphenation in words",
+  "description": "Hyphenation for Russian, English and German text",
   "keywords": [
     "php",
     "hyphenation"
   ],
-  "homepage": "https://hyphenation.mifesta.com",
   "type": "library",
-  "require": {
-    "php": ">=5.2.0",
-    "mifesta/filesystem-php": ">=1.0.0",
-    "ext-iconv": "*",
-    "ext-mbstring": "*"
-  },
-  "require-dev": {
-  },
-  "license": "(MIT or GPL-3.0+)",
+  "license": "LGPL-3.0-or-later",
   "authors": [
     {
       "name": "Sergei Gruzdov",
-      "email": "cardee@mifesta.com"
+      "email": "cardee@mifesta.com",
+      "role": "Developer"
     }
   ],
   "support": {
     "email": "cardee@mifesta.com"
   },
+  "require": {
+    "php": ">=7.4.0 <8.0.0",
+    "ext-iconv": "*",
+    "ext-mbstring": "*"
+  },
   "autoload": {
     "psr-4": {
       "Hyphenation\\": "src/"
     }
+  },
+  "scripts": {
+    "test": "php tests/smoke.php"
   },
   "minimum-stability": "stable"
 }
