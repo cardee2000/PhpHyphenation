@@ -7,7 +7,7 @@ Die Bibliothek setzt weiche Trennstellen nach dem Liang-Knuth-Algorithmus. Eine 
 ## Installation
 
 ```bash
-composer require mifesta/hyphenation-php:~8.2.1
+composer require mifesta/hyphenation-php:~8.3.1
 ```
 
 | Release | PHP |
