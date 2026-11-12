@@ -7,7 +7,7 @@
 ## Установка
 
 ```bash
-composer require mifesta/hyphenation-php:~8.1.1
+composer require mifesta/hyphenation-php:~8.2.1
 ```
 
 | Релиз | PHP |

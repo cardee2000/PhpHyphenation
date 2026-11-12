@@ -7,7 +7,7 @@ The library inserts soft hyphens using the Liang–Knuth algorithm. A line may b
 ## Install
 
 ```bash
-composer require mifesta/hyphenation-php:~8.1.1
+composer require mifesta/hyphenation-php:~8.2.1
 ```
 
 | Release | PHP |
