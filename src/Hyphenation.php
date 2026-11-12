@@ -105,7 +105,7 @@ class Hyphenation
     public $left_limit_uc = 0;
 
     /**
-     * @param string $lang language id: ru_RU, en_US, en_GB, de-1996
+     * @param string $lang language id: ru_RU, en_US, en_GB, de-1996, de_DE
      * @param int $recompile AUTO_RECOMPILE, NEVER_RECOMPILE or ALWAYS_RECOMPILE
      */
     public function __construct($lang, $recompile = self::AUTO_RECOMPILE)

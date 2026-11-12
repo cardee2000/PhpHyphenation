@@ -155,6 +155,11 @@ assert_same('Stra' . $shy . 'ße', $de->hyphenate('Straße', 'UTF-8'), 'eszett s
 assert_same('und', $de->hyphenate('und', 'UTF-8'), 'three-letter german word stays intact');
 assert_same('STRASSE', $de->hyphenate('STRASSE', 'UTF-8'), 'all-caps german word is skipped');
 
+$deDe = new Hyphenation('de_DE');
+assert_same($deOut, $deDe->hyphenate($deWord, 'UTF-8'), 'de_DE matches de-1996 compound');
+assert_same($deTitleOut, $deDe->hyphenate($deTitle, 'UTF-8'), 'de_DE matches de-1996 umlaut word');
+assert_same('Stra' . $shy . 'ße', $deDe->hyphenate('Straße', 'UTF-8'), 'de_DE matches de-1996 eszett');
+
 $method = new ReflectionMethod(Hyphenation::class, 'parse_config_str');
 if (PHP_VERSION_ID < 80100) {
     $method->setAccessible(true);

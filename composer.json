@@ -18,7 +18,7 @@
     "email": "cardee@mifesta.com"
   },
   "require": {
-    "php": ">=8.5.0 <8.6.0",
+    "php": ">=7.4.0 <8.0.0",
     "ext-iconv": "*",
     "ext-mbstring": "*"
   },
