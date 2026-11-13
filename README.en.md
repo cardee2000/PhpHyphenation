@@ -2,6 +2,10 @@
 
 [Русский](README.md) · [Deutsch](README.de.md)
 
+[![Latest Stable Version](https://poser.pugx.org/mifesta/hyphenation-php/v)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![License](https://poser.pugx.org/mifesta/hyphenation-php/license)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![Total Downloads](https://poser.pugx.org/mifesta/hyphenation-php/downloads)](https://packagist.org/packages/mifesta/hyphenation-php)
+
 The library inserts soft hyphens using the Liang–Knuth algorithm. A line may break only at the marked points, and the hyphen character is usually left behind when the text is copied. The dictionaries come from TeX.
 
 ## Install

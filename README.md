@@ -2,6 +2,10 @@
 
 [English](README.en.md) · [Deutsch](README.de.md)
 
+[![Latest Stable Version](https://poser.pugx.org/mifesta/hyphenation-php/v)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![License](https://poser.pugx.org/mifesta/hyphenation-php/license)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![Total Downloads](https://poser.pugx.org/mifesta/hyphenation-php/downloads)](https://packagist.org/packages/mifesta/hyphenation-php)
+
 Библиотека расставляет в тексте мягкие переносы по алгоритму Ляна–Кнута. Строку можно разорвать только в отмеченных местах, а при копировании символ переноса обычно не попадает в буфер. Словари взяты из TeX.
 
 ## Установка

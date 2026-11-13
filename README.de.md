@@ -2,6 +2,10 @@
 
 [Русский](README.md) · [English](README.en.md)
 
+[![Latest Stable Version](https://poser.pugx.org/mifesta/hyphenation-php/v)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![License](https://poser.pugx.org/mifesta/hyphenation-php/license)](https://packagist.org/packages/mifesta/hyphenation-php)
+[![Total Downloads](https://poser.pugx.org/mifesta/hyphenation-php/downloads)](https://packagist.org/packages/mifesta/hyphenation-php)
+
 Die Bibliothek setzt weiche Trennstellen nach dem Liang-Knuth-Algorithmus. Eine Zeile darf nur an den markierten Stellen umbrochen werden, und das Trennzeichen bleibt beim Kopieren gewöhnlich zurück. Die Wörterbücher stammen aus TeX.
 
 ## Installation
